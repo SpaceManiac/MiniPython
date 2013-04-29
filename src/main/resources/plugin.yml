@@ -1,0 +1,5 @@
+name: MiniPython
+version: 1.0
+description: A very lightweight Python plugin loader.
+author: SpaceManiac
+main: com.platymuus.bukkit.minipython.MiniPythonPlugin
