@@ -1,6 +1,7 @@
 package com.platymuus.bukkit.minipython.loader;
 
 import com.platymuus.bukkit.minipython.loader.PythonPlugin;
+import org.bukkit.Server;
 import org.bukkit.event.Event;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.*;
@@ -21,6 +22,19 @@ public class PythonLoader implements PluginLoader {
     public static final Pattern[] PATTERNS = {
             Pattern.compile("\\.py$")
     };
+
+    /**
+     * The Bukkit server we're attached to.
+     */
+    private final Server server;
+
+    /**
+     * Construct the plugin loader.
+     * @param server The Bukkit server.
+     */
+    public PythonLoader(Server server) {
+        this.server = server;
+    }
 
     public Pattern[] getPluginFileFilters() {
         return PATTERNS;
