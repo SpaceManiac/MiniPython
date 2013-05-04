@@ -1,6 +1,7 @@
 package com.platymuus.bukkit.minipython.loader;
 
 import com.avaje.ebean.EbeanServer;
+import com.platymuus.bukkit.minipython.loader.context.PluginContext;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -50,7 +51,7 @@ public class PythonPlugin implements Plugin {
         return dataFolder;
     }
 
-    public PluginDescriptionFile getDescription() {
+    public final PluginDescriptionFile getDescription() {
         return desc;
     }
 
@@ -205,7 +206,7 @@ public class PythonPlugin implements Plugin {
 
     // Internals
 
-    final void initialize(PythonLoader loader, Server server, File file, File dataFolder, PluginDescriptionFile desc) {
+    final void initialize(PythonLoader loader, Server server, File file, File dataFolder, PluginDescriptionFile desc, PluginContext context) {
         if (initialized) return;
         initialized = true;
 
@@ -214,6 +215,7 @@ public class PythonPlugin implements Plugin {
         this.file = file;
         this.dataFolder = dataFolder;
         this.desc = desc;
+        this.context = context;
 
         configFile = new File(dataFolder, "config.yml");
     }
