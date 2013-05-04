@@ -43,6 +43,7 @@ public class PythonLoader implements PluginLoader {
 
     /**
      * Construct the plugin loader.
+     *
      * @param server The Bukkit server.
      */
     public PythonLoader(Server server) {
@@ -75,13 +76,11 @@ public class PythonLoader implements PluginLoader {
         }
 
         // Part 1: set up the plugin's description
-
         PluginContext context = getContext(file);
         PluginDescriptionFile desc;
         try {
             desc = getDescription(getContext(file), file);
-        }
-        catch (InvalidDescriptionException ex) {
+        } catch (InvalidDescriptionException ex) {
             throw new InvalidPluginException("Error in description for " + file.getPath(), ex);
         }
 
@@ -119,8 +118,7 @@ public class PythonLoader implements PluginLoader {
                 mainFile = "main.py";
                 mainStream = context.openStream(mainFile);
             }
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             throw new InvalidPluginException(ex);
         }
 
@@ -129,33 +127,32 @@ public class PythonLoader implements PluginLoader {
         }
 
         // Part 5: get the interpreter all set up
-
         PythonInterpreter interp = new PythonInterpreter();
 
         try {
             prepareInterpreter(interp);
-            interp.execfile(mainStream);
+            interp.execfile(mainStream, mainFile);
             mainStream.close();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             throw new InvalidPluginException("Error running Python for " + file.getName(), ex);
         }
 
         // Part 6: extract the plugin object
         PythonPlugin plugin;
-        PyObject pyClass = interp.get("plugin");
+        PyObject pyClass = interp.get("Plugin");
 
         if (pyClass == null) {
             plugin = new PythonPlugin();
         } else {
             try {
                 plugin = (PythonPlugin) pyClass.__call__().__tojava__(PythonPlugin.class);
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 throw new InvalidPluginException("Could not initialize class for " + file.getName(), ex);
             }
         }
 
+        // Part 7: wrap things up
+        interp.set("pyplugin", plugin);
         plugin.initialize(this, server, file, dataFolder, desc, context, interp);
 
         return plugin;
@@ -219,7 +216,18 @@ public class PythonLoader implements PluginLoader {
     }
 
     private void prepareInterpreter(PythonInterpreter interp) {
+        loadScript(interp, "imports.py");
+        loadScript(interp, "decorators.py");
+    }
 
+    private void loadScript(PythonInterpreter interp, String script) {
+        try {
+            InputStream in = getClass().getClassLoader().getResourceAsStream("scripts/" + script);
+            interp.execfile(in, "builtin/" + script);
+            in.close();
+        } catch (IOException ex) {
+            // could only have happened on the close so whatever.
+        }
     }
 
 }
