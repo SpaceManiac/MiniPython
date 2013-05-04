@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class MiniPythonPlugin extends JavaPlugin {
 
     public void onEnable() {
-        getCommand("minipython").setExecutor(new PythonCommands(this));
+        getCommand("minipython").setExecutor(new MiniCommands(this));
     }
 
     public void onDisable() {

@@ -2,6 +2,7 @@ package com.platymuus.bukkit.minipython;
 
 import com.platymuus.bukkit.minipython.loader.PythonLoader;
 import com.platymuus.bukkit.minipython.loader.PythonPlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -17,11 +18,11 @@ import java.io.File;
 import java.util.*;
 import java.util.regex.Pattern;
 
-public class PythonCommands implements CommandExecutor {
+public class MiniCommands implements CommandExecutor {
 
     private MiniPythonPlugin plugin;
 
-    public PythonCommands(MiniPythonPlugin plugin) {
+    public MiniCommands(MiniPythonPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -171,7 +172,7 @@ public class PythonCommands implements CommandExecutor {
 
         plugin.getServer().getPluginManager().enablePlugin(pl);
 
-        sender.sendMessage(ChatColor.GREEN + "Successfully refreshed " + ChatColor.WHITE + pl.getName() + ChatColor.GREEN + " from " + ChatColor.WHITE + file.getName());
+        sender.sendMessage(ChatColor.GREEN + "Successfully reloaded " + ChatColor.WHITE + pl.getName() + ChatColor.GREEN + " from " + ChatColor.WHITE + file.getName());
     }
 
     @SuppressWarnings("unchecked")
