@@ -5,6 +5,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 /**
@@ -12,18 +13,21 @@ import java.util.regex.Pattern;
  */
 public class MiniPythonPlugin extends JavaPlugin {
 
-    public void onDisable() {}
+    public void onEnable() {
+        getCommand("minipython").setExecutor(new PythonCommands(this));
+    }
 
-    public void onEnable() {}
+    public void onDisable() {
+    }
 
     public void onLoad() {
         PluginManager pm = getServer().getPluginManager();
 
-        // Add t
+        // Add to Bukkit
         getLogger().info("Loading Python plugins...");
         pm.registerInterface(PythonLoader.class);
 
-        // Must manually load plugins to avoid re-loading existing Java plugins
+        // Must manually load plugins to avoid reloading existing Java plugins
         File[] list = this.getFile().getParentFile().listFiles();
         if (list == null) {
             getLogger().severe("Failed to search for Python plugins");
@@ -36,7 +40,7 @@ public class MiniPythonPlugin extends JavaPlugin {
                     try {
                         pm.loadPlugin(file);
                     } catch (Exception e) {
-                        getLogger().severe("Could not load Python plugin " + file.getName());
+                        getLogger().log(Level.SEVERE, "Could not load Python plugin " + file.getName(), e);
                         e.printStackTrace();
                     }
                 }

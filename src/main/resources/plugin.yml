@@ -3,3 +3,19 @@ version: 1.0
 description: A very lightweight Python plugin loader.
 author: SpaceManiac
 main: com.platymuus.bukkit.minipython.MiniPythonPlugin
+
+commands:
+  minipython:
+    aliases: [ mpy, pyloader, pyl ]
+    description: Administration of loaded Python plugins
+    permission: minipython.admin
+    usage: |
+      /<command> load <plugin>
+      /<command> unload <plugin>
+      /<command> reload <plugin>
+      /<command> reloadall
+
+permissions:
+  minipython.admin:
+    description: Allows use of /pyloader admin command
+    default: op
