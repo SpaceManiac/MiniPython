@@ -1,9 +1,5 @@
 package com.platymuus.bukkit.minipython.loader.context;
 
-import org.bukkit.plugin.InvalidDescriptionException;
-import org.bukkit.plugin.PluginDescriptionFile;
-
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 

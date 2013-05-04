@@ -1,8 +1,5 @@
 package com.platymuus.bukkit.minipython.loader.context;
 
-import org.bukkit.plugin.InvalidDescriptionException;
-import org.bukkit.plugin.PluginDescriptionFile;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,7 +17,9 @@ public class DirectoryContext implements PluginContext {
     }
 
     public InputStream openStream(String filename) throws IOException {
-        return new FileInputStream(new File(file, filename));
+        File f = new File(file, filename);
+        if (!f.exists()) return null;
+        return new FileInputStream(f);
     }
 
     public void close() {

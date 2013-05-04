@@ -12,6 +12,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.PluginLogger;
+import org.python.util.PythonInterpreter;
 
 import java.io.*;
 import java.util.List;
@@ -39,7 +40,8 @@ public class PythonPlugin implements Plugin {
     private FileConfiguration config;
 
     // Internals
-    private PluginContext context;
+    PluginContext context;
+    PythonInterpreter interpreter;
 
     // Core attribute getters
 
@@ -72,6 +74,10 @@ public class PythonPlugin implements Plugin {
 
     public final String getName() {
         return getDescription().getName();
+    }
+
+    public final File getFile() {
+        return file;
     }
 
     public String toString() {
@@ -206,7 +212,7 @@ public class PythonPlugin implements Plugin {
 
     // Internals
 
-    final void initialize(PythonLoader loader, Server server, File file, File dataFolder, PluginDescriptionFile desc, PluginContext context) {
+    final void initialize(PythonLoader loader, Server server, File file, File dataFolder, PluginDescriptionFile desc, PluginContext context, PythonInterpreter interp) {
         if (initialized) return;
         initialized = true;
 
@@ -216,6 +222,7 @@ public class PythonPlugin implements Plugin {
         this.dataFolder = dataFolder;
         this.desc = desc;
         this.context = context;
+        this.interpreter = interp;
 
         configFile = new File(dataFolder, "config.yml");
     }
@@ -231,5 +238,4 @@ public class PythonPlugin implements Plugin {
             }
         }
     }
-
 }
