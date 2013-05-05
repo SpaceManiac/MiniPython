@@ -20,4 +20,5 @@ def EventHandler(type, priority=EventPriority.NORMAL, ignoreCancelled=False):
 			handlers = []
 		handlers.append((type, priority, ignoreCancelled))
 		func.bukkit_eventhandler = handlers
+		return func
 	return wrap
