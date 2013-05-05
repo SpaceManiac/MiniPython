@@ -3,9 +3,7 @@
 
 # only useful to put on classes deriving Listener
 def EventHandler(type, priority=EventPriority.NORMAL, ignoreCancelled=False):
-	# resolve the type to Bukkit form
-	try:
-		type = __import__('org.bukkit.event.' + type)
+	# we let the Java side handle resolving type to a class
 	
 	# resolve the priority to Bukkit form
 	if not isinstance(priority, EventPriority):		

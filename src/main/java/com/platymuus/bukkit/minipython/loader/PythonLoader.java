@@ -15,10 +15,9 @@ import org.python.core.PyObject;
 import org.python.core.PyString;
 import org.python.util.PythonInterpreter;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -159,12 +158,19 @@ public class PythonLoader implements PluginLoader {
     }
 
     public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(Listener listener, Plugin plugin) {
-        return null;
+        if (!(listener instanceof PythonListener)) {
+            plugin.getLogger().severe("Tried to register non-PythonListener");
+            return new HashMap<Class<? extends Event>, Set<RegisteredListener>>();
+        }
+
+        return ((PythonListener) listener).createRegisteredListeners(plugin);
     }
 
     public void enablePlugin(Plugin plugin) {
         PythonPlugin pyPlugin = (PythonPlugin) plugin;
         if (pyPlugin.isEnabled()) return;
+
+        plugin.getLogger().info("Enabling " + plugin.getDescription().getFullName());
 
         try {
             pyPlugin.setEnabled(true);
@@ -180,6 +186,8 @@ public class PythonLoader implements PluginLoader {
         if (!pyPlugin.isEnabled()) return;
 
         server.getPluginManager().callEvent(new PluginDisableEvent(plugin));
+
+        plugin.getLogger().info("Disabling " + plugin.getDescription().getFullName());
 
         try {
             pyPlugin.setEnabled(false);
@@ -212,22 +220,25 @@ public class PythonLoader implements PluginLoader {
         } catch (IOException e) {
             // ignore for now
         }
-        return new PluginDescriptionFile(fallback.getName().replace(".py", ""), "no-version", "plugin.py");
+
+        // we can't use the PluginDescriptionFile constructor because it leaves lots of fields null,
+        // so we have to fake it with some auto-generated yaml
+        String text = "name: \"" + fallback.getName().replace(".py", "") + "\"\n" +
+                "version: dev\n" +
+                "main: plugin.py\n";
+        return new PluginDescriptionFile(new StringReader(text));
     }
 
-    private void prepareInterpreter(PythonInterpreter interp) {
+    private void prepareInterpreter(PythonInterpreter interp) throws IOException {
         loadScript(interp, "imports.py");
         loadScript(interp, "decorators.py");
     }
 
-    private void loadScript(PythonInterpreter interp, String script) {
-        try {
-            InputStream in = getClass().getClassLoader().getResourceAsStream("scripts/" + script);
-            interp.execfile(in, "builtin/" + script);
-            in.close();
-        } catch (IOException ex) {
-            // could only have happened on the close so whatever.
-        }
+    private void loadScript(PythonInterpreter interp, String script) throws IOException {
+        InputStream in = getClass().getClassLoader().getResourceAsStream("scripts/" + script);
+        System.out.println("loadScript: in is " + in);
+        interp.execfile(in, "builtin/" + script);
+        in.close();
     }
 
 }
