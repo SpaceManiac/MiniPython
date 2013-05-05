@@ -17,6 +17,7 @@ import org.python.util.PythonInterpreter;
 
 import java.io.*;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -235,10 +236,14 @@ public class PythonLoader implements PluginLoader {
     }
 
     private void loadScript(PythonInterpreter interp, String script) throws IOException {
-        InputStream in = getClass().getClassLoader().getResourceAsStream("scripts/" + script);
-        System.out.println("loadScript: in is " + in);
-        interp.execfile(in, "builtin/" + script);
-        in.close();
+        URL url = getClass().getClassLoader().getResource("scripts/" + script);
+        if (url == null) throw new IOException("Failed to find script " + script);
+
+        URLConnection connection = url.openConnection();
+        connection.setUseCaches(false);
+        InputStream inputStream = url.openStream();
+        interp.execfile(inputStream, "builtin/" + script);
+        inputStream.close();
     }
 
 }

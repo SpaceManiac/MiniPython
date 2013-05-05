@@ -8,13 +8,14 @@ import org.bukkit.plugin.EventExecutor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.TimedRegisteredListener;
-import org.python.antlr.PythonErrorNode;
 import org.python.core.Py;
 import org.python.core.PyException;
 import org.python.core.PyObject;
-import org.python.core.PyTuple;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The Java-side implementation of the event listener system.
@@ -75,8 +76,7 @@ public class PythonListener implements Listener {
         } catch (ClassNotFoundException e) {
             try {
                 return Class.forName("org.bukkit.event." + type).asSubclass(Event.class);
-            }
-            catch (ClassNotFoundException e2) {
+            } catch (ClassNotFoundException e2) {
                 plugin.getLogger().severe("Failed to register listener: no such class " + type);
                 return null;
             }
@@ -96,8 +96,7 @@ public class PythonListener implements Listener {
         public void execute(Listener listener, Event event) throws EventException {
             try {
                 func.__call__(Py.java2py(event));
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 throw new EventException(ex);
             }
         }

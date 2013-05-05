@@ -2,7 +2,6 @@ package com.platymuus.bukkit.minipython;
 
 import com.platymuus.bukkit.minipython.loader.PythonLoader;
 import com.platymuus.bukkit.minipython.loader.PythonPlugin;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -15,7 +14,10 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.SimplePluginManager;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class MiniCommands implements CommandExecutor {
@@ -66,7 +68,7 @@ public class MiniCommands implements CommandExecutor {
         File file = new File("plugins", arg);
         if (!file.exists()) {
             String didYouMean = "";
-            String[] alts = { ".py" };
+            String[] alts = {".py"};
             for (String alt : alts) {
                 if (new File(file.getPath() + alt).exists()) {
                     didYouMean = " (try " + ChatColor.WHITE + arg + alt + ChatColor.RED + "?)";
@@ -127,8 +129,7 @@ public class MiniCommands implements CommandExecutor {
         PythonPlugin pyPlugin = (PythonPlugin) pl;
         try {
             _unload(pyPlugin);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             sender.sendMessage(ChatColor.RED + "Failed to unload " + ChatColor.WHITE + pyPlugin.getName() + ChatColor.RED + ":");
             sender.sendMessage(ChatColor.RED + e.getClass().getSimpleName() + ": " + ChatColor.WHITE + e.getMessage());
             e.printStackTrace();
@@ -153,8 +154,7 @@ public class MiniCommands implements CommandExecutor {
 
         try {
             _unload(pyPlugin);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             sender.sendMessage(ChatColor.RED + "Failed to unload " + ChatColor.WHITE + pyPlugin.getName() + ChatColor.RED + ":");
             sender.sendMessage(ChatColor.RED + e.getClass().getSimpleName() + ": " + ChatColor.WHITE + e.getMessage());
             e.printStackTrace();

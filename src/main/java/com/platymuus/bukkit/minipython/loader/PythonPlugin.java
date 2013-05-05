@@ -93,8 +93,7 @@ public class PythonPlugin implements Plugin {
 
         try {
             return context.openStream(filename);
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             // Ignore any errors and return null
             return null;
         }

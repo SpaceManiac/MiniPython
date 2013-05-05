@@ -12,8 +12,7 @@ public class Reflection {
             Field f = clazz.getDeclaredField(field);
             f.setAccessible(true);
             return f.get(target);
-        }
-        catch (ReflectiveOperationException ex) {
+        } catch (ReflectiveOperationException ex) {
             throw new RuntimeException("Error reflecting", ex);
         }
     }
@@ -27,8 +26,7 @@ public class Reflection {
             Field f = clazz.getDeclaredField(field);
             f.setAccessible(true);
             f.set(target, value);
-        }
-        catch (ReflectiveOperationException ex) {
+        } catch (ReflectiveOperationException ex) {
             throw new RuntimeException("Error reflecting", ex);
         }
     }
