@@ -225,7 +225,7 @@ public class PythonLoader implements PluginLoader {
         // we can't use the PluginDescriptionFile constructor because it leaves lots of fields null,
         // so we have to fake it with some auto-generated yaml
         String text = "name: \"" + fallback.getName().replace(".py", "") + "\"\n" +
-                "version: dev\n" +
+                "version: 0.0\n" +
                 "main: plugin.py\n";
         return new PluginDescriptionFile(new StringReader(text));
     }

@@ -28,7 +28,7 @@ public class MiniPythonPlugin extends JavaPlugin {
         // Make sure we haven't already been added
         try {
             Map<Pattern, PluginLoader> map = (Map<Pattern, PluginLoader>) Reflection.getPrivateValue(pm, "fileAssociations");
-            if (map != null && map.containsKey(PythonLoader.PATTERNS)) {
+            if (map != null && map.containsKey(PythonLoader.PATTERNS[0])) {
                 getLogger().info("MiniPython was already loaded, aborting");
                 return;
             }

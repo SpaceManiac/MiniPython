@@ -19,3 +19,11 @@ class _StdoutRedirect(object):
 sys.stdout = _StdoutRedirect()
 
 server = bukkit.Bukkit.getServer()
+
+# bake some values into __builtin__ so they're referencable anywhere
+def buildin(name, value):
+	import __builtin__
+	setattr(__builtin__, name, value)
+	
+buildin('PythonPlugin', PythonPlugin)
+buildin('PythonListener', PythonListener)

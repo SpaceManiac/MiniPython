@@ -22,3 +22,5 @@ def EventHandler(type, priority=EventPriority.NORMAL, ignoreCancelled=False):
 		func.bukkit_eventhandler = handlers
 		return func
 	return wrap
+
+buildin('EventHandler', EventHandler)
