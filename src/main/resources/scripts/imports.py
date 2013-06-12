@@ -1,8 +1,8 @@
 # imports.py
 # built-in imports and overrides for Python plugins
 
-from com.platymuus.bukkit.minipython.loader import PythonPlugin, PythonListener
-from org.bukkit.event import EventPriority
+from com.platymuus.bukkit.minipython.loader import PythonPlugin
+from org.bukkit.event import EventPriority, Listener
 import org.bukkit as bukkit
 
 import sys
@@ -26,4 +26,5 @@ def buildin(name, value):
 	setattr(__builtin__, name, value)
 	
 buildin('PythonPlugin', PythonPlugin)
-buildin('PythonListener', PythonListener)
+buildin('PythonListener', Listener)
+buildin('Listener', Listener)
