@@ -17,7 +17,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 public class MiniCommands implements CommandExecutor {
@@ -67,16 +66,26 @@ public class MiniCommands implements CommandExecutor {
     private void load(CommandSender sender, String arg) {
         File file = new File("plugins", arg);
         if (!file.exists()) {
-            String didYouMean = "";
             String[] alts = {".py"};
+            File newFile = null;
+            int found = 0;
             for (String alt : alts) {
-                if (new File(file.getPath() + alt).exists()) {
-                    didYouMean = " (try " + ChatColor.WHITE + arg + alt + ChatColor.RED + "?)";
+                File check = new File(file.getPath() + alt);
+                if (check.exists()) {
+                    newFile = check;
+                    ++found;
                 }
             }
 
-            sender.sendMessage(ChatColor.RED + "File " + ChatColor.WHITE + arg + ChatColor.RED + " does not exist" + didYouMean + ".");
-            return;
+            if (found == 1) {
+                file = newFile;
+            } else if (found == 0) {
+                sender.sendMessage(ChatColor.RED + "File " + ChatColor.WHITE + arg + ChatColor.RED + " does not exist.");
+                return;
+            } else {
+                sender.sendMessage(ChatColor.RED + "Multiple files matching " + ChatColor.WHITE + arg + ChatColor.RED + " exist.");
+                return;
+            }
         }
         arg = file.getName();
 
@@ -192,12 +201,11 @@ public class MiniCommands implements CommandExecutor {
 
         SimpleCommandMap cmdMap = (SimpleCommandMap) Reflection.getPrivateValue(pm, "commandMap");
         Map<String, Command> knownCommands = (Map<String, Command>) Reflection.getPrivateValue(cmdMap, "knownCommands");
-        Set<String> aliases = (Set<String>) Reflection.getPrivateValue(cmdMap, "aliases");
         if (pl.getDescription().getCommands() != null) {
             for (String command : pl.getDescription().getCommands().keySet()) {
                 Command cmd = cmdMap.getCommand(command);
                 for (String alias : cmd.getAliases()) {
-                    aliases.remove(alias);
+                    knownCommands.remove(alias);
                 }
                 for (String key : new ArrayList<String>(knownCommands.keySet())) {
                     if (knownCommands.get(key) == cmd) {
