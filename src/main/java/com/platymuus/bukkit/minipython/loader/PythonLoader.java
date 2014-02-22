@@ -96,7 +96,8 @@ public class PythonLoader implements PluginLoader {
         // ...
 
         // Part 3: add the plugin to the Python path if needed
-        PyList path = Py.getSystemState().path;
+        PySystemState state = Py.getSystemState(); //new PySystemState();
+        PyList path = state.path;
         PyString pathEntry = new PyString(file.getAbsolutePath());
         if (context.isDirectory() && !path.__contains__(pathEntry)) {
             path.append(pathEntry);
@@ -127,7 +128,7 @@ public class PythonLoader implements PluginLoader {
         }
 
         // Part 5: get the interpreter all set up
-        PythonInterpreter interp = new PythonInterpreter();
+        PythonInterpreter interp = new PythonInterpreter(); //null, state);
 
         try {
             prepareInterpreter(interp);

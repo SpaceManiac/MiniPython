@@ -1,6 +1,7 @@
 package com.platymuus.bukkit.minipython.loader;
 
 import com.avaje.ebean.EbeanServer;
+import com.platymuus.bukkit.minipython.MiniPythonPlugin;
 import com.platymuus.bukkit.minipython.loader.context.PluginContext;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -12,9 +13,12 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.PluginLogger;
+import org.python.core.Py;
+import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -234,6 +238,19 @@ public class PythonPlugin implements Plugin {
                 onEnable();
             } else {
                 onDisable();
+
+                // delete all the locals
+                if (MiniPythonPlugin.mashUpJython) {
+                    PyObject obj = interpreter.getLocals();
+                    List<PyObject> list = new ArrayList<PyObject>();
+                    for (PyObject key : obj.asIterable()) {
+                        list.add(key);
+                    }
+                    for (PyObject key : list) {
+                        obj.__delitem__(key);
+                    }
+                    interpreter.setLocals(Py.newStringMap());
+                }
             }
         }
     }
