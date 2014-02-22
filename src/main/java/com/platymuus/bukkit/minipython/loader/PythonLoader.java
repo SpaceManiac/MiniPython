@@ -164,17 +164,15 @@ public class PythonLoader implements PluginLoader {
         Map<Class<? extends Event>, Set<RegisteredListener>> result = new HashMap<Class<? extends Event>, Set<RegisteredListener>>();
 
         // java2py lets us loop over our Python elements
-        PyObject self = Py.java2py(this);
+        PyObject self = Py.java2py(listener);
         PyObject memberList = self.__dir__();
 
         for (PyObject memberName : memberList.asIterable()) {
             PyObject func = self.__getattr__(memberName.toString());
             if (!func.isCallable()) continue;
 
-            PyObject list;
-            try {
-                list = func.__getattr__("bukkit_eventhandler");
-            } catch (PyException ex) {
+            PyObject list = func.__findattr__("bukkit_eventhandler");
+            if (list == null) {
                 // it doesn't have that attribute, so skip town
                 continue;
             }
