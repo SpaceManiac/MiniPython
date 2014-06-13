@@ -47,8 +47,8 @@ class _Listener(Listener):
         for i, func in enumerate(functions):
             setattr(self, 'handler_%d' % i, func)
 
-# function to generate plugin class
-def _class():
+# function to generate plugin object
+def _make_plugin():
     class QuickPlugin(PythonPlugin):
         def onEnable(self):
             for name, func in _commands:
@@ -68,4 +68,4 @@ def _class():
             for func in _disable:
                 func()
 
-    return QuickPlugin
+    return QuickPlugin()

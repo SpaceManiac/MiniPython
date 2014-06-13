@@ -65,7 +65,7 @@ public class PythonLoader implements PluginLoader {
             throw new InvalidDescriptionException(new FileNotFoundException(file.getPath() + " does not exist"));
         }
 
-        return getDescription(getContext(file), file);
+        return getContext(file).getDescription();
     }
 
     public Plugin loadPlugin(File file) throws InvalidPluginException, UnknownDependencyException {
@@ -80,7 +80,7 @@ public class PythonLoader implements PluginLoader {
         PluginContext context = getContext(file);
         PluginDescriptionFile desc;
         try {
-            desc = getDescription(context, file);
+            desc = context.getDescription();
         } catch (InvalidDescriptionException ex) {
             throw new InvalidPluginException("Error in description for " + file.getPath(), ex);
         }
@@ -105,58 +105,98 @@ public class PythonLoader implements PluginLoader {
         // b) the scripts/ directory in the loader
         addToPath(state, new File(MiniPythonPlugin.plugin.getFile(), "scripts"));
 
-        // Part 4: determine the main file
-        String mainFile = desc.getMain();
-        InputStream mainStream;
-        try {
-            mainStream = context.openStream(mainFile);
-
-            // if we didn't find anything, try some other common ones
-            if (mainStream == null) {
-                mainFile = "plugin.py";
-                mainStream = context.openStream(mainFile);
-            }
-
-            if (mainStream == null) {
-                mainFile = "main.py";
-                mainStream = context.openStream(mainFile);
-            }
-        } catch (IOException ex) {
-            throw new InvalidPluginException(ex);
-        }
-
-        if (mainStream == null) {
-            throw new InvalidPluginException("Failed to find " + desc.getMain() + " or any fallbacks in " + file.getName());
-        }
-
-        // Part 5: get the interpreter all set up
+        // Part 4: get the interpreter all set up
         PythonInterpreter interp = new PythonInterpreter(null, state);
 
         try {
             // prepare interpreter
             interp.set("_plugin_name", new PyString(desc.getName()));
             loadScript(interp, "_setup.py");
-
-            // run the main file
-            interp.execfile(mainStream, mainFile);
-            mainStream.close();
         } catch (Exception ex) {
-            throw new InvalidPluginException("Error running Python for " + file.getName(), ex);
+            throw new InvalidPluginException("Error preparing interpreter for " + desc.getFullName(), ex);
+        }
+
+        // Part 5: determine and run the main file
+        String[] mainParts = desc.getMain().split(":");
+        PyObject moduleDict;
+        String mainName = null;
+        try {
+            if (context.isDirectory()) {
+                // determine plugin value name
+                String module = mainParts[0];
+                if (mainParts.length > 1) {
+                    mainName = mainParts[1];
+                }
+
+                // import the main module
+                interp.exec("import " + module + " as _main");
+                moduleDict = interp.get("_main").getDict();
+            } else {
+                // determine plugin value name
+                if (!mainParts[0].equals("__auto__")) {
+                    mainName = mainParts[0];
+                }
+
+                // execute the file standalone
+                try (InputStream in = new FileInputStream(file)) {
+                    interp.execfile(in, file.getName());
+                    moduleDict = interp.getLocals();
+                }
+            }
+        } catch (Exception ex) {
+            throw new InvalidPluginException("Error running Python for " + desc.getFullName(), ex);
         }
 
         // Part 6: extract the plugin object
-        PythonPlugin plugin;
-        PyObject pyClass = interp.get("Plugin");
-
-        if (pyClass == null) {
-            plugin = new PythonPlugin();
+        // first, look up the main name in the module if we can do that
+        PyObject item;
+        if (mainName == null) {
+            // have to guess
+            // try 'Main', 'Plugin', and 'quick'
+            mainName = "Main";
+            item = moduleDict.__finditem__("Main");
+            if (item == null) {
+                mainName = "Plugin";
+                item = moduleDict.__finditem__("Plugin");
+            }
+            if (item == null) {
+                mainName = "quick";
+                item = moduleDict.__finditem__("quick");
+            }
+            if (item == null) {
+                throw new InvalidPluginException("No main class for " + desc.getFullName() + ": automatic lookup failed, please specify explicitly");
+            }
         } else {
-            try {
-                plugin = (PythonPlugin) pyClass.__call__().__tojava__(PythonPlugin.class);
-            } catch (Exception ex) {
-                throw new InvalidPluginException("Could not initialize class for " + file.getName(), ex);
+            // name was actually specified
+            item = moduleDict.__finditem__(mainName);
+            if (item == null) {
+                throw new InvalidPluginException("No main class for " + desc.getFullName() + ": name \"" + mainName + "\" not in module");
             }
         }
+
+        // we now have the object
+        // it is either the plugin itself, the class, or a 'quick' module
+        // item is never null at this point
+        Object converted = item.__tojava__(PythonPlugin.class);
+        if (converted == Py.NoConversion) {
+            // see if it has _make_plugin from 'quick' or is callable (like a class)
+            PyObject make_func = item.__findattr__("_make_plugin");
+            try {
+                if (make_func != null) {
+                    item = make_func.__call__();
+                } else if (item.isCallable()) {
+                    item = item.__call__();
+                }
+            } catch (Exception ex) {
+                throw new InvalidPluginException("Error initializing " + desc.getFullName() + " main \"" + mainName + "\"", ex);
+            }
+            converted = item.__tojava__(PythonPlugin.class);
+        }
+        if (converted == Py.NoConversion) {
+            throw new InvalidPluginException("Bad main class for " + desc.getFullName() + ": \"" + mainName + "\" could not be resolved to a plugin");
+        }
+
+        PythonPlugin plugin = (PythonPlugin) converted;
 
         // Part 7: wrap things up
         plugin.initialize(this, server, file, dataFolder, desc, context, interp);
@@ -292,33 +332,11 @@ public class PythonLoader implements PluginLoader {
 
     private PluginContext getContext(File file) {
         // we've externally ensured file both is not null and exists
-
-        String path = file.getName().toLowerCase();
         if (file.isDirectory()) {
             return new DirectoryContext(file);
         } else {
             return new SingleFileContext(file);
         }
-    }
-
-    private PluginDescriptionFile getDescription(PluginContext context, File fallback) throws InvalidDescriptionException {
-        try {
-            InputStream stream = context.openStream("plugin.yml");
-            if (stream != null) {
-                PluginDescriptionFile desc = new PluginDescriptionFile(stream);
-                stream.close();
-                return desc;
-            }
-        } catch (IOException e) {
-            // ignore for now
-        }
-
-        // we can't use the PluginDescriptionFile constructor because it leaves lots of fields null,
-        // so we have to fake it with some auto-generated yaml
-        String text = "name: \"" + fallback.getName().replace(".py", "") + "\"\n" +
-                "version: 0.0\n" +
-                "main: plugin.py\n";
-        return new PluginDescriptionFile(new StringReader(text));
     }
 
     private void loadScript(PythonInterpreter interp, String script) throws IOException {
