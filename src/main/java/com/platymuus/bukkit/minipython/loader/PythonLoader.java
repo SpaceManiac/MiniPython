@@ -79,7 +79,7 @@ public class PythonLoader implements PluginLoader {
         PluginContext context = getContext(file);
         PluginDescriptionFile desc;
         try {
-            desc = getDescription(getContext(file), file);
+            desc = getDescription(context, file);
         } catch (InvalidDescriptionException ex) {
             throw new InvalidPluginException("Error in description for " + file.getPath(), ex);
         }
@@ -96,7 +96,7 @@ public class PythonLoader implements PluginLoader {
         // ...
 
         // Part 3: add the plugin to the Python path if needed
-        PySystemState state = Py.getSystemState(); //new PySystemState();
+        PySystemState state = new PySystemState();
         PyList path = state.path;
         PyString pathEntry = new PyString(file.getAbsolutePath());
         if (context.isDirectory() && !path.__contains__(pathEntry)) {
@@ -128,10 +128,14 @@ public class PythonLoader implements PluginLoader {
         }
 
         // Part 5: get the interpreter all set up
-        PythonInterpreter interp = new PythonInterpreter(); //null, state);
+        PythonInterpreter interp = new PythonInterpreter(null, state);
 
         try {
-            prepareInterpreter(interp);
+            // prepare interpreter
+            interp.set("_plugin_name", new PyString(desc.getName()));
+            loadScript(interp, "_setup.py");
+
+            // run the main file
             interp.execfile(mainStream, mainFile);
             mainStream.close();
         } catch (Exception ex) {
@@ -153,7 +157,6 @@ public class PythonLoader implements PluginLoader {
         }
 
         // Part 7: wrap things up
-        interp.set("pyplugin", plugin);
         plugin.initialize(this, server, file, dataFolder, desc, context, interp);
 
         return plugin;
@@ -184,7 +187,10 @@ public class PythonLoader implements PluginLoader {
                 boolean ignoreCancelled = tuple.__getitem__(2).__nonzero__();
 
                 Class<? extends Event> eventClass = resolveType(type, plugin);
-                if (eventClass == null) continue;
+                if (eventClass == null) {
+                    plugin.getLogger().severe("Could not register listener: unknown event type \"" + type + "\"");
+                    continue;
+                }
 
                 EventExecutor executor = new FuncExecutor(func);
 
@@ -300,13 +306,8 @@ public class PythonLoader implements PluginLoader {
         return new PluginDescriptionFile(new StringReader(text));
     }
 
-    private void prepareInterpreter(PythonInterpreter interp) throws IOException {
-        loadScript(interp, "imports.py");
-        loadScript(interp, "decorators.py");
-    }
-
     private void loadScript(PythonInterpreter interp, String script) throws IOException {
-        URL url = getClass().getClassLoader().getResource("scripts/" + script);
+        URL url = PythonLoader.class.getClassLoader().getResource("scripts/" + script);
         if (url == null) throw new IOException("Failed to find script " + script);
 
         URLConnection connection = url.openConnection();
