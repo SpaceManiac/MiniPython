@@ -5,7 +5,7 @@ import java.lang.reflect.Field;
 /**
  * Helper methods for reflecting on private members of Bukkit internals.
  */
-public class Reflection {
+class Reflection {
 
     public static <T> Object getPrivateValue(Class<T> clazz, Object target, String field) {
         try {

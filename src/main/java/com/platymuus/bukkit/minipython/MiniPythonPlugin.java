@@ -57,59 +57,64 @@ public class MiniPythonPlugin extends JavaPlugin {
     public void onDisable() {
         // mash up Jython into a fine pulp and get it out of permgen
         if (mashUpJython) {
-            // one source of references to PySystemState
-            Py.getSystemState().cleanup();
-            Py.setSystemState(null);
-            Py.defaultSystemState = null;
-
-            // another reference, the ThreadLocal - doesn't get cleaned up *ever*
-            Object threadStateMapping = Reflection.getPrivateValue(Py.class, null, "threadStateMapping");
-            Object cachedThreadState = Reflection.getPrivateValue(threadStateMapping, "cachedThreadState");
-            ThreadLocal<ThreadState> local = (ThreadLocal<ThreadState>) cachedThreadState;
-            //System.out.println("ThreadLocal was: 0x" + Integer.toHexString(local.get().hashCode()));
-            local.set(null);
-
-            // Take out the Python/Google finalizer thread
-            // It is supposed to die on its own when its class loader is reclaimed, but it appears
-            // as though it is keeping the class loader alive itself
-            ThreadGroup group = Thread.currentThread().getThreadGroup();
-            Thread[] threads = new Thread[group.activeCount() + 3];
-            group.enumerate(threads, true);
-
-            boolean killed = false;
-            for (Thread th : threads) {
-                if (th == null) continue;
-
-                // "instanceof Finalizer" cannot be used because the thread's class uses a different
-                // class loader than the one we are using here - so the toString is checked instead
-                if (th.toString().contains(Finalizer.class.getName())) {
-                    killed = true;
-                    th.stop();
-                    break;
-                }
-            }
-            if (!killed) {
-                getLogger().warning("Failed to kill Jython finalizer thread - there may be PermGen leaks");
-            }
-
-            // Remove our PluginClassLoader from java.lang.Proxy.loaderToCache - the map is supposed to be weak
-            // but this apparently isn't good enough
-            Map<ClassLoader, Map<List<String>, Object>> loaderToCache = (Map<ClassLoader, Map<List<String>, Object>>)
-                    Reflection.getPrivateValue(Proxy.class, null, "loaderToCache");
-            Object o = loaderToCache.remove(getClassLoader());
-
-            int i = 0;
-            Map<Class<?>, Void> proxyClasses = (Map<Class<?>, Void>) Reflection.getPrivateValue(Proxy.class, null, "proxyClasses");
-            Iterator<Class<?>> iter = proxyClasses.keySet().iterator();
-            while (iter.hasNext()) {
-                if (iter.next().getClassLoader() == getClassLoader()) {
-                    iter.remove();
-                    ++i;
-                }
-            }
-
-            System.out.println("Removed " + i + " classes and loaderToCache[" + (o != null) + "]");
+            disableMash();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void disableMash() {
+        // one source of references to PySystemState
+        Py.getSystemState().cleanup();
+        Py.setSystemState(null);
+        Py.defaultSystemState = null;
+
+        // another reference, the ThreadLocal - doesn't get cleaned up *ever*
+        Object threadStateMapping = Reflection.getPrivateValue(Py.class, null, "threadStateMapping");
+        Object cachedThreadState = Reflection.getPrivateValue(threadStateMapping, "cachedThreadState");
+        ThreadLocal<ThreadState> local = (ThreadLocal<ThreadState>) cachedThreadState;
+        //System.out.println("ThreadLocal was: 0x" + Integer.toHexString(local.get().hashCode()));
+        local.set(null);
+
+        // Take out the Python/Google finalizer thread
+        // It is supposed to die on its own when its class loader is reclaimed, but it appears
+        // as though it is keeping the class loader alive itself
+        ThreadGroup group = Thread.currentThread().getThreadGroup();
+        Thread[] threads = new Thread[group.activeCount() + 3];
+        group.enumerate(threads, true);
+
+        boolean killed = false;
+        for (Thread th : threads) {
+            if (th == null) continue;
+
+            // "instanceof Finalizer" cannot be used because the thread's class uses a different
+            // class loader than the one we are using here - so the toString is checked instead
+            if (th.toString().contains(Finalizer.class.getName())) {
+                killed = true;
+                th.stop();
+                break;
+            }
+        }
+        if (!killed) {
+            getLogger().warning("Failed to kill Jython finalizer thread - there may be PermGen leaks");
+        }
+
+        // Remove our PluginClassLoader from java.lang.Proxy.loaderToCache - the map is supposed to be weak
+        // but this apparently isn't good enough
+        Map<ClassLoader, Map<List<String>, Object>> loaderToCache = (Map<ClassLoader, Map<List<String>, Object>>)
+                Reflection.getPrivateValue(Proxy.class, null, "loaderToCache");
+        Object o = loaderToCache.remove(getClassLoader());
+
+        int i = 0;
+        Map<Class<?>, Void> proxyClasses = (Map<Class<?>, Void>) Reflection.getPrivateValue(Proxy.class, null, "proxyClasses");
+        Iterator<Class<?>> iter = proxyClasses.keySet().iterator();
+        while (iter.hasNext()) {
+            if (iter.next().getClassLoader() == getClassLoader()) {
+                iter.remove();
+                ++i;
+            }
+        }
+
+        System.out.println("Removed " + i + " classes and loaderToCache[" + (o != null) + "]");
     }
 
     public void onLoad() {
@@ -118,6 +123,7 @@ public class MiniPythonPlugin extends JavaPlugin {
 
         // Make sure we haven't already been added
         try {
+            @SuppressWarnings("unchecked")
             Map<Pattern, PluginLoader> map = (Map<Pattern, PluginLoader>) Reflection.getPrivateValue(pm, "fileAssociations");
             if (map != null && map.containsKey(PythonLoader.PATTERNS[0])) {
                 getLogger().info("MiniPython was already loaded, aborting");

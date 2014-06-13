@@ -213,7 +213,7 @@ public class PythonLoader implements PluginLoader {
 
     public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(Listener listener, Plugin plugin) {
         boolean useTimings = plugin.getServer().getPluginManager().useTimings();
-        Map<Class<? extends Event>, Set<RegisteredListener>> result = new HashMap<Class<? extends Event>, Set<RegisteredListener>>();
+        Map<Class<? extends Event>, Set<RegisteredListener>> result = new HashMap<>();
 
         // java2py lets us loop over our Python elements
         PyObject self = Py.java2py(listener);
@@ -245,7 +245,7 @@ public class PythonLoader implements PluginLoader {
 
                 Set<RegisteredListener> eventSet = result.get(eventClass);
                 if (eventSet == null) {
-                    eventSet = new HashSet<RegisteredListener>();
+                    eventSet = new HashSet<>();
                     result.put(eventClass, eventSet);
                 }
 

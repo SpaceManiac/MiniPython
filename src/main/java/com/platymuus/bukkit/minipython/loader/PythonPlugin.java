@@ -155,6 +155,7 @@ public class PythonPlugin implements Plugin {
 
         InputStream defConfigStream = getResource("config.yml");
         if (defConfigStream != null) {
+            // todo: update this method for UTF-8 awareness changes
             YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
 
             config.setDefaults(defConfig);
@@ -267,7 +268,7 @@ public class PythonPlugin implements Plugin {
                 // delete all the locals
                 if (MiniPythonPlugin.mashUpJython) {
                     PyObject obj = interpreter.getLocals();
-                    List<PyObject> list = new ArrayList<PyObject>();
+                    List<PyObject> list = new ArrayList<>();
                     for (PyObject key : obj.asIterable()) {
                         list.add(key);
                     }

@@ -19,9 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class MiniCommands implements CommandExecutor {
+class MiniCommands implements CommandExecutor {
 
-    private MiniPythonPlugin plugin;
+    private final MiniPythonPlugin plugin;
 
     public MiniCommands(MiniPythonPlugin plugin) {
         this.plugin = plugin;
@@ -207,7 +207,7 @@ public class MiniCommands implements CommandExecutor {
                 for (String alias : cmd.getAliases()) {
                     knownCommands.remove(alias);
                 }
-                for (String key : new ArrayList<String>(knownCommands.keySet())) {
+                for (String key : new ArrayList<>(knownCommands.keySet())) {
                     if (knownCommands.get(key) == cmd) {
                         knownCommands.remove(key);
                     }
