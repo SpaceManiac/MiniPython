@@ -1,12 +1,17 @@
 # _setup.py
 # setup code for new interpreters during Python loading
 
+# loader sets _plugin_name before running this script raw
+# this check prevents this from being imported as a module
+if not '_plugin_name' in locals():
+    raise ImportError("cannot import _setup as module")
+
+# keep everything scoped nicely
 def _setup():
     from com.platymuus.bukkit.minipython.loader import PythonPlugin
     from org.bukkit.event import EventPriority, Listener
     from org.bukkit import Bukkit
 
-    # _plugin_name is set by the plugin loader
     # redirect Python stdout through Bukkit logger
     import sys
     class StdoutRedirect(object):

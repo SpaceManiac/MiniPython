@@ -25,6 +25,8 @@ public class MiniPythonPlugin extends JavaPlugin {
 
     public static boolean mashUpJython = false;
 
+    public static MiniPythonPlugin plugin;
+
     public void onEnable() {
         getCommand("minipython").setExecutor(new MiniCommands(this));
 
@@ -45,6 +47,11 @@ public class MiniPythonPlugin extends JavaPlugin {
             // and no other plugin then schedules a task, this reference remains hanging.
             System.gc();
         }
+    }
+
+    @Override
+    public File getFile() {
+        return super.getFile();
     }
 
     public void onDisable() {
@@ -106,6 +113,7 @@ public class MiniPythonPlugin extends JavaPlugin {
     }
 
     public void onLoad() {
+        plugin = this;
         PluginManager pm = getServer().getPluginManager();
 
         // Make sure we haven't already been added

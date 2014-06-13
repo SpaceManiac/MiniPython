@@ -6,6 +6,7 @@ import com.platymuus.bukkit.minipython.loader.context.PluginContext;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.generator.ChunkGenerator;
@@ -211,6 +212,30 @@ public class PythonPlugin implements Plugin {
 
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         return null;
+    }
+
+    /**
+     * Gets the command with the given name, specific to this plugin. Commands
+     * need to be registered in the {@link PluginDescriptionFile#getCommands()
+     * PluginDescriptionFile} to exist at runtime.
+     *
+     * @param name name or alias of the command
+     * @return the plugin command if found, otherwise null
+     */
+    public PluginCommand getCommand(String name) {
+        // From JavaPlugin
+        String alias = name.toLowerCase();
+        PluginCommand command = getServer().getPluginCommand(alias);
+
+        if (command == null || command.getPlugin() != this) {
+            command = getServer().getPluginCommand(desc.getName().toLowerCase() + ":" + alias);
+        }
+
+        if (command != null && command.getPlugin() == this) {
+            return command;
+        } else {
+            return null;
+        }
     }
 
     // Internals

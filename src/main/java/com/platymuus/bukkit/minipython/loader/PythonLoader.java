@@ -1,5 +1,6 @@
 package com.platymuus.bukkit.minipython.loader;
 
+import com.platymuus.bukkit.minipython.MiniPythonPlugin;
 import com.platymuus.bukkit.minipython.loader.context.DirectoryContext;
 import com.platymuus.bukkit.minipython.loader.context.PluginContext;
 import com.platymuus.bukkit.minipython.loader.context.SingleFileContext;
@@ -95,13 +96,14 @@ public class PythonLoader implements PluginLoader {
         // Part 2: check dependencies eventually?
         // ...
 
-        // Part 3: add the plugin to the Python path if needed
+        // Part 3: initialize state and add entries to the path
         PySystemState state = new PySystemState();
-        PyList path = state.path;
-        PyString pathEntry = new PyString(file.getAbsolutePath());
-        if (context.isDirectory() && !path.__contains__(pathEntry)) {
-            path.append(pathEntry);
+        // a) the plugin directory or zip, if needed
+        if (context.isDirectory()) {
+            addToPath(state, file);
         }
+        // b) the scripts/ directory in the loader
+        addToPath(state, new File(MiniPythonPlugin.plugin.getFile(), "scripts"));
 
         // Part 4: determine the main file
         String mainFile = desc.getMain();
@@ -160,6 +162,13 @@ public class PythonLoader implements PluginLoader {
         plugin.initialize(this, server, file, dataFolder, desc, context, interp);
 
         return plugin;
+    }
+
+    private void addToPath(PySystemState state, File file) {
+        PyString entry = new PyString(file.getAbsolutePath());
+        if (!state.path.contains(entry)) {
+            state.path.append(entry);
+        }
     }
 
     public Map<Class<? extends Event>, Set<RegisteredListener>> createRegisteredListeners(Listener listener, Plugin plugin) {
@@ -251,6 +260,9 @@ public class PythonLoader implements PluginLoader {
 
         try {
             pyPlugin.setEnabled(true);
+        } catch (PyException ex) {
+            server.getLogger().log(Level.SEVERE, "Error in Python code while enabling " + plugin.getDescription().getFullName());
+            ex.printStackTrace();
         } catch (Throwable ex) {
             server.getLogger().log(Level.SEVERE, "Error occurred while enabling " + plugin.getDescription().getFullName() + " (Is it up to date?)", ex);
         }
@@ -268,6 +280,9 @@ public class PythonLoader implements PluginLoader {
 
         try {
             pyPlugin.setEnabled(false);
+        } catch (PyException ex) {
+            server.getLogger().log(Level.SEVERE, "Error in Python code while enabling " + plugin.getDescription().getFullName());
+            ex.printStackTrace();
         } catch (Throwable ex) {
             server.getLogger().log(Level.SEVERE, "Error occurred while disabling " + plugin.getDescription().getFullName() + " (Is it up to date?)", ex);
         }
