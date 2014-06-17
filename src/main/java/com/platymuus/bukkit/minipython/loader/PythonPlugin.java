@@ -10,10 +10,7 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.generator.ChunkGenerator;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
-import org.bukkit.plugin.PluginLogger;
+import org.bukkit.plugin.*;
 import org.python.core.Py;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
@@ -27,7 +24,7 @@ import java.util.logging.Logger;
 /**
  * A loaded Python plugin.
  */
-public class PythonPlugin implements Plugin {
+public class PythonPlugin extends PluginBase {
 
     // Core attributes
     private boolean initialized = false;
@@ -75,10 +72,6 @@ public class PythonPlugin implements Plugin {
             logger = new PluginLogger(this);
         }
         return logger;
-    }
-
-    public final String getName() {
-        return getDescription().getName();
     }
 
     public final File getFile() {

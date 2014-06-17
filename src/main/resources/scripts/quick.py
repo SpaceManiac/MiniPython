@@ -32,6 +32,11 @@ def event(event, priority=EventPriority.NORMAL, ignore_cancelled=False):
         return func
     return wrap
 
+# helper functions
+def log(*args):
+    text = ' '.join(str(x) for x in args)
+    plugin.logger.info(text)
+
 # wrappers for commands and events
 class _Executor(CommandExecutor):
     def __init__(self, func):
@@ -49,6 +54,7 @@ class _Listener(Listener):
 
 # function to generate plugin object
 def _make_plugin():
+    global plugin
     class QuickPlugin(PythonPlugin):
         def onEnable(self):
             for name, func in _commands:
@@ -68,4 +74,5 @@ def _make_plugin():
             for func in _disable:
                 func()
 
-    return QuickPlugin()
+    plugin = QuickPlugin()
+    return plugin
