@@ -62,7 +62,7 @@ def _make_plugin():
                 if cmd is None:
                     self.logger.severe("Failed to set quick command: unknown command \"" + name + "\"")
                 else:
-                    cmd.setExecutor(_Executor(func))
+                    cmd.executor = _Executor(func)
 
             if _events:
                 self.server.pluginManager.registerEvents(_Listener(_events), self)
